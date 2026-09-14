@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi CSI Radar</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- ═══ TOP BAR ═══ -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <div class="brand">
+                <i class="fas fa-satellite-dish"></i>
+                <span class="brand-text">CSI<span class="brand-accent">RADAR</span></span>
+            </div>
+            <div class="chip mode-chip" id="modeChip">
+                <i class="fas fa-circle"></i> DISCONNECTED
+            </div>
+        </div>
+        <div class="topbar-center">
+            <div class="live-stats">
+                <div class="live-stat" title="Paket/saniye">
+                    <i class="fas fa-wave-square"></i>
+                    <span id="livePps">0</span> pps
+                </div>
+                <div class="live-stat" title="Sinyal gücü">
+                    <i class="fas fa-signal"></i>
+                    <span id="liveRssi">--</span> dBm
+                </div>
+                <div class="live-stat" title="Subcarrier">
+                    <i class="fas fa-bars-staggered"></i>
+                    <span id="liveSub">0</span> sc
+                </div>
+                <div class="live-stat" title="Kalite">
+                    <i class="fas fa-gem"></i>
+                    <span id="liveQuality">--%</span>
+                </div>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <button class="btn btn-glow green" id="btnConnect">
+                <i class="fas fa-plug"></i> Bağlan
+            </button>
+            <button class="btn btn-glow blue" id="btnStream" disabled>
+                <i class="fas fa-play"></i> Başlat
+            </button>
+            <button class="btn btn-glow purple" id="btnCalibrate" disabled>
+                <i class="fas fa-crosshairs"></i> Kalibre
+            </button>
+        </div>
+    </header>
+
+    <!-- ═══ MAIN LAYOUT ═══ -->
+    <main class="app-grid">
+        <!-- SOL: Büyük Radar + Presence -->
+        <section class="col-radar">
+            <!-- Presence Hero -->
+            <div class="presence-hero" id="presenceHero">
+                <div class="hero-icon" id="heroIcon">
+                    <i class="fas fa-ghost"></i>
+                </div>
+                <div class="hero-state" id="heroState">NO_SIGNAL</div>
+                <div class="hero-detail" id="heroDetail">ESP32 bağlayın</div>
+                <div class="hero-metrics">
+                    <div class="hero-metric">
+                        <svg viewBox="0 0 36 36" class="ring-chart">
+                            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="ring-fill motion-ring" id="ringMotion" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="ring-label">Hareket</span>
+                        <span class="ring-value" id="valMotion">0%</span>
+                    </div>
+                    <div class="hero-metric">
+                        <svg viewBox="0 0 36 36" class="ring-chart">
+                            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="ring-fill confidence-ring" id="ringConfidence" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="ring-label">Güven</span>
+                        <span class="ring-value" id="valConfidence">0%</span>
+                    </div>
+                    <div class="hero-metric">
+                        <svg viewBox="0 0 36 36" class="ring-chart">
+                            <path class="ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="ring-fill quality-ring" id="ringQuality" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span class="ring-label">Kalite</span>
+                        <span class="ring-value" id="valQuality">0%</span>
+                    </div>
+                    <div class="hero-metric direction-box">
+                        <i class="fas fa-location-arrow" id="dirIcon"></i>
+                        <span class="ring-label">Yön</span>
+                        <span class="ring-value" id="valDirection">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grafikler -->
+            <div class="graph-grid">
+                <div class="graph-card">
+                    <div class="graph-header"><span>Motion Score</span><span class="graph-val" id="gMotionVal">0.00</span></div>
+                    <canvas id="graphMotion"></canvas>
+                </div>
+                <div class="graph-card">
+                    <div class="graph-header"><span>Signal Energy</span><span class="graph-val" id="gEnergyVal">0.00</span></div>
+                    <canvas id="graphEnergy"></canvas>
+                </div>
+                <div class="graph-card wide">
+                    <div class="graph-header"><span>CSI Amplitude (subcarriers)</span><span class="graph-val" id="gAmpVal">--</span></div>
+                    <canvas id="graphAmplitude"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- SAĞ: Timeline + System -->
+        <aside class="col-side">
+            <!-- Sistem Bilgi -->
+            <div class="sys-card">
+                <div class="sys-title"><i class="fas fa-microchip"></i> Sistem</div>
+                <div class="sys-grid">
+                    <div class="sys-item"><label>Port</label><span id="sysPort">-</span></div>
+                    <div class="sys-item"><label>Kanal</label><span id="sysCh">-</span></div>
+                    <div class="sys-item"><label>SNR</label><span id="sysSnr">-</span></div>
+                    <div class="sys-item"><label>Frame</label><span id="sysFrames">0</span></div>
+                    <div class="sys-item"><label>Drop</label><span id="sysDrop">0%</span></div>
+                    <div class="sys-item"><label>Kalibre</label><span id="sysCal">✗</span></div>
+                    <div class="sys-item"><label>Uptime</label><span id="sysUptime">0s</span></div>
+                    <div class="sys-item"><label>Durum</label><span id="sysDuration">0s</span></div>
+                </div>
+            </div>
+
+            <!-- Event Timeline -->
+            <div class="timeline-card">
+                <div class="sys-title"><i class="fas fa-timeline"></i> Olay Geçmişi</div>
+                <div class="timeline" id="timeline">
+                    <div class="timeline-empty">Henüz olay yok</div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <div class="toast-container" id="toasts"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
