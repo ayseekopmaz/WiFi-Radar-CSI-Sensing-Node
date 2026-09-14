@@ -21,3 +21,14 @@ Kamera, kızılötesi veya PIR sensör **kullanmadan**; sadece Wi-Fi sinyal dalg
 * ⚡ **Canlı Web Dashboard:** Flask & Socket.IO entegrasyonu ile milisaniyelik CSI veri akışı ve ısı haritası (Heatmap) sunar[cite: 1, 9].
 
 ---
+## 🧰 Donanım ve Yazılım Gereksinimleri
+
+### Donanım
+* **ESP32-WROOM** (USB arayüzlü geliştirme kartı)
+* **2.4GHz Wi-Fi Router / Modem**[cite: 2, 5]
+* Micro-USB / Type-C bağlantı kablosu
+
+### Yazılım
+* **ESP32 Firmware:** Arduino IDE (ESP-IDF CSI API entegre)[cite: 2, 5]
+* **Backend:** Python 3.8+
+* **Kütüphaneler:** Flask, Flask-SocketIO, PySerial, NumPy, Psutil[cite: 3]
